@@ -1,0 +1,412 @@
+---
+title: |
+  | SCWG workshop series May 2017
+  | <span style="color:#6E298D">Attendee Feedback</span>
+output: html_document
+---
+
+<br>
+<br>
+
+
+Workshop website: [https://camh-scwg.github.io/compucool-may-2017/](https://camh-scwg.github.io/compucool-may-2017/)    
+Survey: [www.bit.ly/scwgmay2017](https://edc.camhx.ca/redcap/surveys/?s=E88A3K788Y)    
+Survey data: [link](https://docs.google.com/spreadsheets/d/1MgfwzRD0_uidIXwQrKintyokxhLN7KHiTn0m1Rjxpd8/edit?usp=sharing)     
+Survey codebook: [link](https://drive.google.com/open?id=1E2cYf1br2cJauP5TJygq2w3ynHr4DcxWA6vc9JFiIoqBb6YK4VOJxOyaEYODSuN-YlhdzJxh07PjbpFp)    
+Code: [link](https://drive.google.com/file/d/0B6yB0-2m4D1-WDktaEdfVE5wb1U/view?usp=sharing)    
+
+<br>
+
+Across May's 23 workshops, we had a total of 382 attendees (294 internal, 88 external), at least 81 of whom were unique.
+
+After excluding incomplete records, we received 51 survey responses (38 internal, 13 external). 
+
+<br>
+<hr>
+<br>
+
+```{r PACKAGES, echo=FALSE, message=FALSE, warning=FALSE, ignore = TRUE}
+#Load necessary packages
+library(ggplot2)    
+library(knitr)       
+library(grid)       
+library(reshape2)
+```
+
+```{r SETUP, echo=FALSE, message=FALSE, warning=FALSE, ignore = TRUE}
+opts_chunk$set(fig.width=12)
+
+# Read in data
+feedback <- read.csv('SCWGWorkshop_DATA_2017-06-06.csv', header=TRUE, sep=",") 
+```
+
+```{r CLEANING, echo=FALSE, message=FALSE, warning=FALSE, ignore = TRUE}
+
+##### Set up and clean dataframe
+
+# Make a dataframe
+feedback <- data.frame(feedback)  
+
+# Assign workshop labels
+feedback$workshops_may9[feedback$workshops_may9 == 1]  <- "Intro to programming logic"
+feedback$workshops_may9[feedback$workshops_may9 == 2] 	<- "Intro to Linux and the Shell"
+feedback$workshops_may9[feedback$workshops_may9 == 3] 	<- "Introduction to SPSS"
+feedback$workshops_may9[feedback$workshops_may9 == 4] 	<- "Advanced statistics with SPSS"
+feedback$workshops_may10[feedback$workshops_may10 == 5] 	<- "Preparing your data"
+feedback$workshops_may10[feedback$workshops_may10 == 6] 	<- "Intro to the SCC"
+feedback$workshops_may10[feedback$workshops_may10 == 7] 	<- "Intro to REDCap"
+feedback$workshops_may10[feedback$workshops_may10 == 8] 	<- "REDCap surveys"
+feedback$workshop_may11[feedback$workshop_may11 == 9]  <- "Intro to R"
+feedback$workshop_may11[feedback$workshop_may11 == 10] 	<- "Neuroimaging Tools"
+feedback$workshop_may11[feedback$workshop_may11 == 11] 	<- "Exploring Data with R"
+feedback$workshop_may11[feedback$workshop_may11 == 12] 	<- "Spreadsheets"
+feedback$workshop_may15[feedback$workshop_may15 == 13]  <- "Intro to Python"
+feedback$workshop_may15[feedback$workshop_may15 == 14] 	<- "Genetics on the SCC"
+feedback$workshop_may15[feedback$workshop_may15 == 15] 	<- "MATLAB"
+feedback$workshop_may15[feedback$workshop_may15 == 16] 	<- "Managing Code, Experiments, & Data"
+feedback$workshop_may16[feedback$workshop_may16 == 17]  <- "Automating in Linux"
+feedback$workshop_may16[feedback$workshop_may16 == 18] 	<- "Advanced SCC"
+feedback$workshop_may16[feedback$workshop_may16 == 19] 	<- "Intro to R"
+feedback$workshop_may16[feedback$workshop_may16 == 20] 	<- "Statistics with R"
+feedback$workshop_may17[feedback$workshop_may17 == 21]  <- "SQL"
+feedback$workshop_may17[feedback$workshop_may17 == 22] 	<- "REDCap data management"
+feedback$workshop_may17[feedback$workshop_may17 == 23] 	<- "REDCap API"
+
+# Remove incomplete records 
+feedback <- feedback[feedback$scwg_workshop_evaluation_questionnaire_timestamp != "[not completed]", ]
+
+# Remove record 9 which does not specify workshop name (is NA)
+feedback <- feedback[ !(feedback$record_id == 9), ]
+
+# Tidy up workshop names (collapse workshop names in cols 5-10 across days)
+feedback <- cbind(feedback[1:4], "workshop_name" = as.character(na.omit(c(t(feedback[5:10])))), feedback[11:ncol(feedback)]) 
+
+# Remove unnecessary columns 
+feedback <- subset(feedback, select = -c(1:4))  
+
+# Sort dataframe alphabetically by workshop name
+feedback <- feedback[order(feedback$workshop_name) , ]
+
+# Assign labels to 'job_title'
+feedback$job_title[feedback$job_title == 1] <- "Research Assistant"
+feedback$job_title[feedback$job_title == 2] <- "Research Analyst"
+feedback$job_title[feedback$job_title == 3] <- "Research Methods Specialist"
+feedback$job_title[feedback$job_title == 4] <- "Graduate Student"
+feedback$job_title[feedback$job_title == 5] <- "Post-doctoral Fellow"
+feedback$job_title[feedback$job_title == 6] <- "Scientist"
+feedback$job_title[feedback$job_title == 7] <- "Other"
+feedback$job_title[feedback$job_title == 8] <- "Research Coordinator"
+feedback$job_title[feedback$job_title == 9] <- "Manager"
+feedback$job_title[feedback$job_title == 10] <- "Undergraduate Student"
+
+# Change labelled 'job_title' into factor
+feedback$job_title <- as.factor(feedback$job_title)
+
+# Assign labels to 'job_description'
+feedback$job_description___1[feedback$job_description___1 == 1] <- "Administrative"
+feedback$job_description___2[feedback$job_description___2 == 1] <- "Clinical"
+feedback$job_description___3[feedback$job_description___3 == 1] <- "Computing"
+feedback$job_description___4[feedback$job_description___4 == 1] <- "Genetics"
+feedback$job_description___5[feedback$job_description___5 == 1] <- "Imaging"
+feedback$job_description___6[feedback$job_description___6 == 1] <- "IT"
+feedback$job_description___7[feedback$job_description___7 == 1] <- "Statistics"
+feedback$job_description___8[feedback$job_description___8 == 1] <- "Other"
+feedback$job_description___9[feedback$job_description___9 == 1] <- "Molecular"
+
+# Change `job_description` items into a vector, and remove 0s
+job_description_vec <- unlist(feedback[21:29])
+job_description_vec <- job_description_vec[job_description_vec != 0]
+
+# Change 'job_comp_exper' into factor and assign levels and labels
+feedback$job_comp_exper<- factor(feedback$job_comp_exper, levels = c(5:0), labels = c("5 or more years", "4 years", "3 years", "2 years", "1 year", "None"))
+
+# Make 'internal' and 'external' a factor, and assign lables
+feedback$job_camh<- factor(feedback$job_camh, exclude=NULL, levels = c(1, 2, NA), labels = c("internal", "external", "unspecified"))
+
+```
+
+```{r PLOTTING_DATAFRAME, echo=FALSE, message=FALSE, warning=FALSE, ignore = TRUE}
+
+# Make a datafrom for plotting - reverse alphabetical
+fb.plot <- feedback[order(feedback$workshop_name, decreasing = TRUE) , ]
+fb.plot$workshop_name <- factor(fb.plot$workshop_name, levels = unique(fb.plot$workshop_name))
+```
+
+```{r COMBINED_FEEDBACK_5PT, echo=FALSE, message=FALSE, warning=FALSE}
+
+#### Plot 5pt Likert feedback items over loop of all workshops - combined
+
+# make vector of plot titles
+Plot_titles_1 <- c(
+  'Overall, I am glad I attended the workshop',
+  'I was able to follow along with and understand the material',
+  'The workshop format was a good way for me to learn about this content',
+  'The skills I learned will help me do my job better',
+  'I will recommend this workshop to my colleagues',
+  'The instructor was knowledgeable about the topic',
+  'The instructor and/or helpers were able to answer any questions I had')
+
+# make data into longform
+fb.plot2 <- fb.plot[,c(2:8, 16)]
+row.names(fb.plot2) <- NULL
+fb.plot2 <- melt(data = fb.plot2, measure.vars = names(fb.plot2[1:7]), variable.name = "Question", value.name = "Rating")
+
+# set up plot
+plot <- ggplot(fb.plot2, aes(x=Question, y=Rating, colour = factor(job_camh))) 
+  
+# plot the mean
+plot <- plot + stat_summary(fun.y=mean, geom="point", size=3.5, color = "black")
+
+# set up jitter effect and factor colour
+plot <- plot + geom_jitter(shape=16, position=position_jitter(height = 0.1, width = 0.4), alpha = 0.7) +
+  scale_colour_manual(values = c("#6E298D", "#42C4DD", "#C2CB20"))
+
+# set axis range
+plot <- plot + coord_cartesian(ylim = c(.75, 5.25))
+
+# change axis labels
+plot <- plot + scale_x_discrete(labels = Plot_titles_1) 
+
+# make it prettier
+plot <- plot + theme_bw() + 
+  theme(plot.title = element_text(size=11), legend.position="top", axis.ticks = element_blank(), axis.title.y = element_blank(), axis.title.x = element_blank()) + ggtitle("Combined feedback across all workshops") +
+   scale_y_continuous(breaks = c(1,2,3,4,5), labels = c('strongly disagree', 'disagree', 'neither agree nor disagree', 'agree', 'strongly agree')) + theme(legend.title = element_blank())
+
+# flip to horizontal orientation
+plot <- plot + coord_flip() 
+
+# labels dot counts - NOTE, THIS IS A MANUAL PROCESS AND VALUES MUST BE CHANGED EACH TIME (use 'table')
+plot <- plot + annotate("text", y = 1:5, x= 7.75, label = c("1", "8", "13", "120", "200"), color = "black") + annotate("rect", xmin = 7, xmax = 8, ymin = 5, ymax = 5, alpha = .2)
+
+print(plot)
+```
+
+```{r PLOTTING_IND_5PT, echo=FALSE, message=FALSE, warning=FALSE}
+
+#### Plot 5pt Likert feedback items over loop of all individual workshops
+
+# make vector of plot titles
+Plot_titles_1 <- c(
+  'Overall, I am glad I attended the workshop',
+  'I was able to follow along with and understand the material',
+  'The workshop format was a good way for me to learn about this content',
+  'The skills I learned will help me do my job better',
+  'I will recommend this workshop to my colleagues',
+  'The instructor was knowledgeable about the topic',
+  'The instructor and/or helpers were able to answer any questions I had')
+
+# initiate list
+Plots_list_1 <- list()
+
+# initiate title counter
+ctr <- 1
+
+# create for loop to make plots
+for (i in names(feedback[2:8]))  {
+
+# set up plot
+plot <- ggplot(fb.plot, aes_string('workshop_name', i)) 
+
+# set up jitter effect 
+plot <- plot + geom_point(stat = 'identity', position = position_jitter(height = 0.1, width = 0.2), colour = 'dark grey')  
+
+# plot the mean
+plot <- plot + stat_summary(fun.y = "mean", colour = 'black', size = 3.5, geom = 'point') +
+  
+# write title
+  ggtitle(Plot_titles_1[ctr]) + 
+  
+# make it prettier
+  theme_bw() + 
+  scale_x_discrete(name='') + 
+  theme(plot.title = element_text(size=11), axis.ticks = element_blank(), axis.title.x = element_blank()) + scale_y_continuous(breaks = c(1,2,3,4,5), labels = c('strongly disagree', 'disagree', 'neither agree nor disagree', 'agree', 'strongly agree'), limits = c(.75,5.25))
+
+# flip to horizontal orientation
+plot <- plot + coord_flip() 
+
+# store in list
+Plots_list_1[[i]] <- plot 
+
+ctr <- ctr + 1
+}
+
+print(Plots_list_1[[1]])
+print(Plots_list_1[[2]])
+print(Plots_list_1[[3]])
+print(Plots_list_1[[4]])
+print(Plots_list_1[[5]])
+print(Plots_list_1[[6]])
+print(Plots_list_1[[7]])
+```
+
+<br>
+<hr>
+<br>
+
+```{r COMBINED_FEEDBACK_3PT, echo=FALSE, message=FALSE, warning=FALSE}
+
+#### Plot 3pt Likert feedback items over loop of all workshops - combined
+
+# make vector of plot titles
+Plot_titles_2 <- c(
+  'Amount of content',
+  'Difficulty of content',
+  'Pace of instruction',
+  'Amount of time for workshop',
+  'Amount of time on exercises / examples')
+
+# make data into longform
+fb.plot3 <- fb.plot[,c(9:13, 16)]
+row.names(fb.plot3) <- NULL
+fb.plot3 <- melt(data = fb.plot3, measure.vars = names(fb.plot3[1:5]), variable.name = "Question", value.name = "Rating")
+
+# set up plot
+plot <- ggplot(fb.plot3, aes(x=Question, y=Rating, colour = factor(job_camh)))
+
+# plot the mean
+plot <- plot + stat_summary(fun.y=mean, geom="point", size=3.5, color = "black")
+
+# set up jitter effect
+plot <- plot + geom_jitter(shape=16, position=position_jitter(height = 0.1, width = 0.4), alpha = 0.7) +
+  scale_colour_manual(values = c("#6E298D", "#42C4DD", "#C2CB20"))
+
+# set axis range
+plot <- plot + coord_cartesian(ylim = c(.75, 5.25))
+
+# change axis labels
+plot <- plot + scale_x_discrete(labels = Plot_titles_2) 
+
+# make it prettier
+plot <- plot + theme_bw() + 
+  theme(plot.title = element_text(size=11), legend.position="top", axis.ticks = element_blank(), axis.title.y = element_blank(), axis.title.x = element_blank()) + ggtitle("Combined feedback across all workshops") + scale_y_continuous(breaks = c(-1,0,1), labels = c('not enough', 'just right', 'too much')) + theme(legend.title = element_blank())
+
+# flip to horizontal orientation
+plot <- plot + coord_flip() 
+
+# labels dot counts - MANUAL
+plot <- plot + annotate("text", y = -1:1, x= 5.75, label = c("51", "174", "20"), color = "black") + annotate("rect", xmin = 5, xmax = 6, ymin = 1, ymax = 1, alpha = .2)
+
+print(plot)
+```
+
+```{r PLOTTING_IND_3PT, echo=FALSE, message=FALSE, warning=FALSE}
+
+#### Plot 3pt Likert feedback items over loop of all individual workshops
+
+# make vector of plot titles
+Plot_titles_2 <- c(
+  'Amount of content',
+  'Difficulty of content',
+  'Pace of instruction',
+  'Amount of time for workshop',
+  'Amount of time on exercises / examples')
+
+# initiate list
+Plots_list_2 <- list()
+
+# initiate title counter
+ctr <- 1
+
+# create for loop to make plots
+for (i in names(feedback[9:13]))  {
+
+# set up plot
+plot <- ggplot(fb.plot, aes_string('workshop_name', i)) 
+
+# set up jitter effect 
+plot <- plot + geom_point(stat = 'identity', position = position_jitter(height = 0.1, width = 0.2), colour = 'dark grey')  
+
+# plot the mean
+plot <- plot + stat_summary(fun.y = "mean", colour = 'black', size = 3.5, geom = 'point')
+
+# set axis range
+plot <- plot + scale_y_continuous(limits = c(-1.25, 1.25)) +
+  
+# write title
+  ggtitle(Plot_titles_2[ctr]) + 
+  
+# make it prettier
+  theme_bw() + 
+  scale_x_discrete(name='') + 
+  theme(plot.title = element_text(size=11), 
+        axis.ticks = element_blank(), 
+        axis.title.x = element_blank()) + 
+   scale_y_continuous(breaks = c(-1,0,1), labels = c('not enough', 'just right', 'too much'))
+
+# flip to horizontal orientation
+plot <- plot + coord_flip() 
+
+# store in list
+Plots_list_2[[i]] <- plot 
+
+ctr <- ctr + 1
+}
+
+print(Plots_list_2[[1]])
+print(Plots_list_2[[2]])
+print(Plots_list_2[[3]])
+print(Plots_list_2[[4]])
+print(Plots_list_2[[5]])
+```
+
+<br>
+<hr>
+<br>
+
+```{r JOB_TITLE,  echo=FALSE, message=FALSE, warning=FALSE}
+
+# Reorder levels of 'job_title' to display in increasing frequency on plot
+feedback$job_title <- factor(feedback$job_title, levels = names(sort(table(feedback$job_title), decreasing = TRUE)))
+
+# make a histogram of 'job_title'
+plot <- ggplot(feedback[!is.na(feedback$job_title),], aes(job_title)) + geom_bar(fill = 'light grey') +
+  theme_bw() +
+  ggtitle('Job title') + 
+  theme(plot.title = element_text(size=11), axis.ticks = element_blank(), legend.position = 'none') +
+  coord_flip() +
+  scale_y_continuous(name = '') +
+  scale_x_discrete(name = '')+
+  geom_text(aes(label = paste0(format(100* ..count../sum(..count..), digits = 2), '%'), hjust = 1.25, colour = 'red', y = ..count..), stat = 'count')
+
+plot
+```
+
+```{r RESEARCH_FOCUS,  echo=FALSE, message=FALSE, warning=FALSE}
+
+# factor and reorder levels of 'job_description_vec' to display in increasing frequency on plot
+job_description_vec <- factor(job_description_vec, levels = names(sort(table(job_description_vec), decreasing = TRUE)))
+
+# make a dataframe
+jobs <- as.data.frame(job_description_vec[!is.na(job_description_vec)])
+names(jobs) <- c("job_description")
+
+# make a histogram of `job_description_vec`
+plot <- ggplot(jobs,
+  aes(x=job_description)) + 
+  geom_bar(fill = 'light grey') +
+  geom_text(aes(label = paste0(format(100* ..count../sum(..count..), digits = 2), '%'), hjust = 1.25, colour = 'red', y = ..count..), stat = 'count') +
+  theme_bw() +
+  ggtitle('Research focus') + 
+  theme(plot.title = element_text(size=11), axis.ticks = element_blank(), legend.position = 'none') +
+  coord_flip() +
+  scale_y_continuous(name = '') +
+  scale_x_discrete(name = '')
+
+plot
+```
+
+```{r COMPUTING_EXPERIENCE,  echo=FALSE, message=FALSE, warning=FALSE}
+
+# make a histogram of 'job_comp_exper'
+plot <- ggplot(feedback[!is.na(feedback$job_comp_exper),], aes(job_comp_exper)) + geom_bar(fill = 'light grey') +
+  geom_text(aes(label = paste0(format(100* ..count../sum(..count..), digits = 2), '%'), hjust = 1.25, colour = 'red', y = ..count..), stat = 'count') +
+  theme_bw() +
+  ggtitle('Scientific computing experience') + 
+  theme(plot.title = element_text(size=11), axis.ticks = element_blank(), legend.position = 'none') +
+  coord_flip() +
+  scale_y_continuous(name = '') +
+  scale_x_discrete(name = '')
+
+plot
+```
+
